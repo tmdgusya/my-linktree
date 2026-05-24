@@ -6,6 +6,7 @@ const impact = document.querySelector("#impactMark");
 const ribbon = document.querySelector("#ribbonWindow");
 const typeSlug = document.querySelector("#typeSlug");
 const stage = document.querySelector(".stage");
+const soundButton = document.querySelector("#soundButton");
 
 const lines = [
   {
@@ -57,6 +58,154 @@ const lines = [
 ];
 
 let currentOffset = 0;
+let currentRun = 0;
+let audioContext;
+let soundEnabled = false;
+
+const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
+
+function getAudioContext() {
+  if (!AudioContextCtor) {
+    return null;
+  }
+
+  if (!audioContext) {
+    audioContext = new AudioContextCtor();
+  }
+
+  return audioContext;
+}
+
+async function unlockSound() {
+  const context = getAudioContext();
+
+  if (!context) {
+    return false;
+  }
+
+  if (context.state === "suspended") {
+    await context.resume();
+  }
+
+  return context.state === "running";
+}
+
+function connectToOutput(input, gain, pan = 0) {
+  if (!audioContext) {
+    return;
+  }
+
+  if (audioContext.createStereoPanner) {
+    const panner = audioContext.createStereoPanner();
+    panner.pan.value = pan;
+    input.connect(panner);
+    panner.connect(gain);
+  } else {
+    input.connect(gain);
+  }
+
+  gain.connect(audioContext.destination);
+}
+
+function createNoiseSource(duration) {
+  const sampleRate = audioContext.sampleRate;
+  const frameCount = Math.max(1, Math.floor(sampleRate * duration));
+  const buffer = audioContext.createBuffer(1, frameCount, sampleRate);
+  const data = buffer.getChannelData(0);
+
+  for (let index = 0; index < frameCount; index += 1) {
+    const decay = 1 - index / frameCount;
+    data[index] = (Math.random() * 2 - 1) * decay * decay;
+  }
+
+  const source = audioContext.createBufferSource();
+  source.buffer = buffer;
+  return source;
+}
+
+function playStrikeSound(char) {
+  if (!soundEnabled || !audioContext || audioContext.state !== "running") {
+    return;
+  }
+
+  const now = audioContext.currentTime;
+  const isSpace = char === " ";
+  const duration = isSpace ? 0.026 : 0.044 + Math.random() * 0.018;
+  const noise = createNoiseSource(duration);
+  const highpass = audioContext.createBiquadFilter();
+  const bandpass = audioContext.createBiquadFilter();
+  const snapGain = audioContext.createGain();
+  const body = audioContext.createOscillator();
+  const bodyGain = audioContext.createGain();
+  const pan = (Math.random() - 0.5) * 0.18;
+
+  highpass.type = "highpass";
+  highpass.frequency.value = 850 + Math.random() * 420;
+  bandpass.type = "bandpass";
+  bandpass.frequency.value = 2600 + Math.random() * 950;
+  bandpass.Q.value = 0.74;
+
+  snapGain.gain.setValueAtTime(0.0001, now);
+  snapGain.gain.exponentialRampToValueAtTime(isSpace ? 0.018 : 0.072 + Math.random() * 0.026, now + 0.003);
+  snapGain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+  noise.connect(highpass);
+  highpass.connect(bandpass);
+  connectToOutput(bandpass, snapGain, pan);
+  noise.start(now);
+  noise.stop(now + duration + 0.01);
+
+  body.type = "triangle";
+  body.frequency.setValueAtTime(118 + Math.random() * 34, now);
+  body.frequency.exponentialRampToValueAtTime(72 + Math.random() * 18, now + 0.048);
+  bodyGain.gain.setValueAtTime(0.0001, now);
+  bodyGain.gain.exponentialRampToValueAtTime(isSpace ? 0.006 : 0.024 + Math.random() * 0.01, now + 0.004);
+  bodyGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.058);
+
+  connectToOutput(body, bodyGain, pan * 0.6);
+  body.start(now);
+  body.stop(now + 0.065);
+}
+
+function playCarriageSound() {
+  if (!soundEnabled || !audioContext || audioContext.state !== "running") {
+    return;
+  }
+
+  const now = audioContext.currentTime;
+
+  for (let index = 0; index < 5; index += 1) {
+    const tickAt = now + index * 0.028;
+    const noise = createNoiseSource(0.025);
+    const filter = audioContext.createBiquadFilter();
+    const gain = audioContext.createGain();
+
+    filter.type = "bandpass";
+    filter.frequency.value = 1200 + index * 140;
+    filter.Q.value = 0.9;
+    gain.gain.setValueAtTime(0.0001, tickAt);
+    gain.gain.exponentialRampToValueAtTime(0.032 - index * 0.003, tickAt + 0.003);
+    gain.gain.exponentialRampToValueAtTime(0.0001, tickAt + 0.025);
+
+    noise.connect(filter);
+    connectToOutput(filter, gain, -0.18 + index * 0.08);
+    noise.start(tickAt);
+    noise.stop(tickAt + 0.04);
+  }
+
+  const bell = audioContext.createOscillator();
+  const bellGain = audioContext.createGain();
+
+  bell.type = "sine";
+  bell.frequency.setValueAtTime(1450, now + 0.14);
+  bell.frequency.exponentialRampToValueAtTime(980, now + 0.28);
+  bellGain.gain.setValueAtTime(0.0001, now + 0.14);
+  bellGain.gain.exponentialRampToValueAtTime(0.018, now + 0.145);
+  bellGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.32);
+  connectToOutput(bell, bellGain, 0.12);
+  bell.start(now + 0.14);
+  bell.stop(now + 0.34);
+}
 
 function createRow(line, index, top) {
   const tag = line.href ? "a" : "div";
@@ -100,7 +249,7 @@ function setCarriageFromSpan(span) {
   paper.style.setProperty("--carriage-y", `${y}px`);
 }
 
-function strike(span, char) {
+function strike(span, char, withSound = false) {
   const strength = 0.78 + Math.random() * 0.22;
   const dx = (Math.random() - 0.5) * 1.45;
   const dy = (Math.random() - 0.5) * 1.1;
@@ -151,42 +300,81 @@ function strike(span, char) {
   if (char === " ") {
     span.classList.add("is-space");
   }
+
+  if (withSound) {
+    playStrikeSound(char);
+  }
 }
 
-async function typeLine(row, line) {
+async function typeLine(row, line, withSound, runId) {
   row.classList.add("is-current");
 
   for (let index = 0; index < line.text.length; index += 1) {
+    if (runId !== currentRun) {
+      return false;
+    }
+
     const char = line.text[index];
     const span = document.createElement("span");
     span.className = "ink-char";
     span.textContent = char === " " ? "\u00a0" : char;
     row.appendChild(span);
 
-    strike(span, char);
+    strike(span, char, withSound);
 
     const punctuationPause = /[./@_-]/.test(char) ? 5 : 0;
     const spacePause = char === " " ? 2 : 0;
-    const pause = 3 + Math.random() * 6 + punctuationPause + spacePause;
+    const pause = withSound
+      ? 34 + Math.random() * 42 + punctuationPause * 7 + spacePause * 7
+      : 3 + Math.random() * 6 + punctuationPause + spacePause;
     await sleep(pause);
   }
 
   row.classList.remove("is-current");
-  await sleep(28);
+  await sleep(withSound ? 72 : 28);
+  return true;
 }
 
-async function carriageReturn(nextOffset) {
+async function carriageReturn(nextOffset, withSound, runId) {
   paper.classList.remove("is-striking");
   paper.classList.add("is-returning");
   paper.style.setProperty("--carriage-x", "9%");
 
-  await sleep(24);
+  if (withSound) {
+    playCarriageSound();
+  }
+
+  await sleep(withSound ? 88 : 24);
+
+  if (runId !== currentRun) {
+    return false;
+  }
+
   setFeed(nextOffset, true);
-  await sleep(90);
+  await sleep(withSound ? 230 : 90);
   paper.classList.remove("is-returning");
+  return true;
 }
 
-async function runTypewriter() {
+function resetTypewriter() {
+  output.replaceChildren();
+  output.classList.remove("is-feeding");
+  paper.classList.remove("is-complete", "is-returning", "is-striking");
+  stage.classList.remove("is-hit");
+  impact.classList.remove("is-visible");
+  ribbon.classList.remove("is-visible");
+  typeSlug.classList.remove("is-visible");
+  paper.style.setProperty("--carriage-x", "9%");
+  paper.style.setProperty("--carriage-y", "70%");
+  setFeed(0, false);
+}
+
+async function runTypewriter(options = {}) {
+  const runId = ++currentRun;
+  const withSound = options.withSound === true && soundEnabled;
+
+  resetTypewriter();
+
   let offset = 0;
   const rows = lines.map((line, index) => {
     const row = createRow(line, index, offset);
@@ -195,17 +383,42 @@ async function runTypewriter() {
   });
 
   for (let index = 0; index < lines.length; index += 1) {
+    if (runId !== currentRun) {
+      return;
+    }
+
     currentOffset = rows[index].offsetTop;
     setFeed(currentOffset, index > 0);
-    await sleep(index === 0 ? 180 : 36);
-    await typeLine(rows[index], lines[index]);
+    await sleep(index === 0 ? 180 : withSound ? 120 : 36);
+
+    const completedLine = await typeLine(rows[index], lines[index], withSound, runId);
+    if (!completedLine || runId !== currentRun) {
+      return;
+    }
 
     if (index < lines.length - 1) {
-      await carriageReturn(rows[index + 1].offsetTop);
+      const completedReturn = await carriageReturn(rows[index + 1].offsetTop, withSound, runId);
+      if (!completedReturn) {
+        return;
+      }
     }
   }
 
   paper.classList.add("is-complete");
 }
+
+soundButton?.addEventListener("click", async () => {
+  const unlocked = await unlockSound();
+
+  if (!unlocked) {
+    return;
+  }
+
+  soundEnabled = true;
+  soundButton.classList.add("is-on");
+  soundButton.setAttribute("aria-pressed", "true");
+  soundButton.setAttribute("aria-label", "타자기 소리로 다시 재생");
+  runTypewriter({ withSound: true });
+});
 
 runTypewriter();
