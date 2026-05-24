@@ -25,6 +25,12 @@ This Linktree should feel like a small personal desk turned into a kinetic artwo
 | Saddle | `#72563b` | Lecture/future content accent |
 | Sun | `#d99f3f` | Small highlights only |
 
+## Typography
+
+- Primary typewriter face: `J1950Year` / `J1950년` when available locally through SandollCloud.
+- Fallback stack: `Courier Prime`, `Courier New`, system monospace.
+- Do not commit Sandoll font files into the repository unless the license explicitly permits web embedding and redistribution.
+
 ## Layout
 
 - One centered column, max width `440px`.
