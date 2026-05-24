@@ -108,7 +108,8 @@ async function startSoundPlayback() {
     if (context.state === "suspended") {
       await context.resume();
     }
-  } catch {
+  } catch (error) {
+    console.debug("[sound] context resume failed", error);
     soundUnlocking = false;
     return false;
   }
@@ -121,8 +122,16 @@ async function startSoundPlayback() {
   soundEnabled = true;
   lastSoundStartAt = Date.now();
   updateSoundButton();
-  playPrimerSound();
-  runTypewriter({ withSound: true });
+
+  try {
+    playPrimerSound();
+    runTypewriter({ withSound: true });
+  } catch (error) {
+    console.debug("[sound] playback chain failed", error);
+    soundUnlocking = false;
+    return false;
+  }
+
   soundUnlocking = false;
   return true;
 }
@@ -481,9 +490,6 @@ async function runTypewriter(options = {}) {
 }
 
 async function activateSound(event) {
-  if (event && typeof event.preventDefault === "function") {
-    event.preventDefault();
-  }
   const now = Date.now();
   if (soundUnlocking || now - lastSoundStartAt < 350) {
     return;
@@ -492,8 +498,11 @@ async function activateSound(event) {
   await startSoundPlayback();
 }
 
-soundButton?.addEventListener("click", activateSound);
-soundButton?.addEventListener("touchend", activateSound, { passive: false });
+if (window.PointerEvent) {
+  soundButton?.addEventListener("pointerup", activateSound);
+} else {
+  soundButton?.addEventListener("click", activateSound);
+}
 
 updateSoundButton();
 runTypewriter({ withSound: false });
