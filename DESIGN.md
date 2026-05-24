@@ -2,7 +2,7 @@
 
 ## Direction
 
-This Linktree should feel like a quiet personal desk artwork: warm, calm, technical, tactile, and slightly cinematic. Roach's links should feel typed directly into the still-life scene, not placed inside a web UI panel.
+This Linktree should feel like a quiet personal desk artwork: warm, tactile, mechanical, and slightly cinematic. The links should not read as a UI panel. They should feel physically typed into a sheet moving through the typewriter.
 
 ## Voice
 
@@ -15,33 +15,35 @@ This Linktree should feel like a quiet personal desk artwork: warm, calm, techni
 
 | Token | Value | Use |
 | --- | --- | --- |
-| Paper | `#ead7b3` | Heavy paper surface |
-| Paper light | `#fff7e6` | Soft highlights |
-| Ink | `#211d17` | Primary typed text |
-| Ink soft | `rgba(33, 29, 23, 0.66)` | Intro copy |
-| Teal | `#2d6570` | Kicker accent |
-| Saddle | `#735239` | Link labels |
+| Ink | `#201b14` | Primary typed text |
+| Ink soft | `rgba(32, 27, 20, 0.72)` | Secondary typed text |
+| Teal | `#215b64` | Field note accent |
+| Saddle | `#6f4c32` | Warm ink variance |
+| Paper veil | `rgba(236, 213, 166, 0.055)` | Subtle material overlay aligned to the generated sheet |
 
 ## Typography
 
 - Primary face: `YComputer`, loaded from `assets/fonts/Ycomputer.otf`.
-- Source: KT Y Brand's Y콤퓨타체. The official page says Y콤퓨타체 may be used and redistributed freely.
-- Reason: Y콤퓨타 is described as a bitmap typeface with a typewriter-inspired 탈네모 serif structure, closer to the Korean typewriter mood than a generic monospace fallback.
-- Fallback stack: `J1950Year` / `J1950년` if installed locally, then `Courier Prime`, `Courier New`, system monospace.
+- Source: KT Y Brand's Y콤퓨타체.
+- License note: the official KT Y Brand page states that Y콤퓨타체 may be used and redistributed freely.
+- Reason: Y콤퓨타체 has a bitmap/typewriter-inspired 탈네모 structure, so it gives the page a Korean mechanical text mood instead of generic monospace.
 
 ## Layout
 
-- First screen is a full-viewport still-life scene.
-- The generated background typewriter sets the mood; do not add a separate CSS-drawn typewriter.
-- Avoid card/panel styling. The typed content should sit directly on the paper image.
-- Links remain real anchors even though they are presented as typed text.
+- The generated background typewriter sets the still-life scene.
+- A near-transparent material layer is aligned near the typewriter platen, letting the generated paper texture remain dominant.
+- Avoid card/panel styling. The typed area should read as ink on the photographed sheet, not as a glass UI container.
+- Links remain real anchors after they are typed.
 
 ## Motion
 
-- Text appears character by character.
-- No key-strike motion, synthetic typewriter, or sound toggle.
-- Reduced-motion users should still see the content without disruptive movement.
+- The active line stays near a fixed strike line.
+- After each line, the paper feeds upward to simulate line advance.
+- Each character receives random ink pressure, small baseline drift, and a short strike flash.
+- The ribbon/impact marker and type slug move with the current character as a visible strike cue.
+- The machine/paper jolts subtly on each strike and snaps on carriage return.
+- No synthetic sound is used.
 
 ## GitHub Pages Notes
 
-This site is intentionally static: `index.html`, `styles.css`, `script.js`, and local assets only. It can be published from the repository root using GitHub Pages without a build step.
+This site is intentionally static: `index.html`, `styles.css`, `script.js`, image assets, and the licensed/free-to-redistribute font asset. It can be published from the repository root using GitHub Pages without a build step.
