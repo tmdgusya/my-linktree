@@ -2,7 +2,7 @@
 
 ## Direction
 
-This Linktree should feel like a quiet personal desk artwork: warm, calm, technical, tactile, and slightly cinematic. The profile icon is the anchor, while roach's links appear on a heavy sheet of paper with a real typewriter still life in the background.
+This Linktree should feel like a quiet personal desk artwork: warm, calm, technical, tactile, and slightly cinematic. Roach's links should feel typed directly into the still-life scene, not placed inside a web UI panel.
 
 ## Voice
 
@@ -33,7 +33,7 @@ This Linktree should feel like a quiet personal desk artwork: warm, calm, techni
 
 - First screen is a full-viewport still-life scene.
 - The generated background typewriter sets the mood; do not add a separate CSS-drawn typewriter.
-- Heavy paper is the main reading surface and should match the background paper texture.
+- Avoid card/panel styling. The typed content should sit directly on the paper image.
 - Links remain real anchors even though they are presented as typed text.
 
 ## Motion
