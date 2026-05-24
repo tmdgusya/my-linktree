@@ -60,7 +60,7 @@ const lines = [
 let currentOffset = 0;
 let currentRun = 0;
 let audioContext;
-let soundEnabled = true;
+let soundEnabled = false;
 let soundUnlocked = false;
 let soundUnlocking = false;
 let lastSoundStartAt = 0;
@@ -537,4 +537,4 @@ document.addEventListener("keydown", unlockDefaultSound, true);
 soundButton?.addEventListener("pointerdown", unlockDefaultSound, true);
 soundButton?.addEventListener("mousedown", unlockDefaultSound, true);
 soundButton?.addEventListener("touchstart", unlockDefaultSound, true);
-runTypewriter({ withSound: true });
+runTypewriter({ withSound: false });
