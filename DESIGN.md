@@ -2,7 +2,7 @@
 
 ## Direction
 
-This Linktree should feel like a small personal desk: warm, calm, technical, and approachable. The profile icon is the anchor, so the system borrows its parchment background, moss green body, teal glasses, saddle brown shell, and small amber warmth.
+This Linktree should feel like a small personal desk turned into a kinetic artwork: warm, calm, technical, tactile, and slightly cinematic. The profile icon is the anchor, while the main experience is a vintage typewriter typing roach's links onto a heavy sheet of paper.
 
 ## Voice
 
@@ -28,15 +28,24 @@ This Linktree should feel like a small personal desk: warm, calm, technical, and
 ## Layout
 
 - One centered column, max width `440px`.
-- Avatar first, then identity, then links.
-- Link cards are fixed-height enough for scanning and thumb tapping.
-- Cards use `8px` radius; only the outer shell and avatar are rounder.
+- First screen is a full-viewport animated scene.
+- Heavy paper is the main reading surface.
+- The typewriter sits in the lower visual field and must not block the active typed content.
+- Links remain real anchors even though they are presented as typed text.
 
 ## Link Types
 
-- `primary`: business email or the link with the strongest conversion goal.
-- `default`: YouTube, Threads, LinkedIn, and other active destinations.
-- `muted`: future lecture/course links before launch.
+- `typed-line`: profile name and intro copy.
+- `typed-link`: active destinations typed line by line.
+- `pending`: future lecture/course links before launch.
+
+## Motion And Sound
+
+- Text appears character by character.
+- Each typed character triggers a short synthetic key click.
+- Each completed line triggers a subtle typewriter bell.
+- Sound starts only after user interaction through the sound toggle, respecting browser autoplay rules.
+- Reduced-motion users should still see the content without disruptive movement.
 
 ## Icon Set
 
