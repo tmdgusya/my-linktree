@@ -61,7 +61,6 @@ let currentOffset = 0;
 let currentRun = 0;
 let audioContext;
 let soundEnabled = false;
-let soundUnlocked = false;
 let soundUnlocking = false;
 let lastSoundStartAt = 0;
 
@@ -77,20 +76,6 @@ function getAudioContext() {
   }
 
   return audioContext;
-}
-
-async function unlockSound() {
-  const context = getAudioContext();
-
-  if (!context) {
-    return false;
-  }
-
-  if (context.state === "suspended") {
-    await context.resume();
-  }
-
-  return context.state === "running";
 }
 
 function updateSoundButton() {
@@ -124,7 +109,6 @@ async function startSoundPlayback() {
       await context.resume();
     }
   } catch {
-    soundUnlocked = false;
     soundUnlocking = false;
     return false;
   }
@@ -135,7 +119,6 @@ async function startSoundPlayback() {
   }
 
   soundEnabled = true;
-  soundUnlocked = true;
   lastSoundStartAt = Date.now();
   updateSoundButton();
   playPrimerSound();
@@ -497,44 +480,15 @@ async function runTypewriter(options = {}) {
   paper.classList.add("is-complete");
 }
 
-function removeDefaultSoundListeners() {
-  document.removeEventListener("pointerdown", unlockDefaultSound, true);
-  document.removeEventListener("mousedown", unlockDefaultSound, true);
-  document.removeEventListener("touchstart", unlockDefaultSound, true);
-  document.removeEventListener("keydown", unlockDefaultSound, true);
-  soundButton?.removeEventListener("pointerdown", unlockDefaultSound, true);
-  soundButton?.removeEventListener("mousedown", unlockDefaultSound, true);
-  soundButton?.removeEventListener("touchstart", unlockDefaultSound, true);
-}
+soundButton?.addEventListener("click", async (event) => {
+  event.preventDefault();
 
-async function unlockDefaultSound(event) {
-  if (soundUnlocked) {
-    removeDefaultSoundListeners();
-    return;
-  }
-
-  const started = await startSoundPlayback();
-
-  if (started) {
-    removeDefaultSoundListeners();
-  }
-}
-
-soundButton?.addEventListener("click", async () => {
   if (Date.now() - lastSoundStartAt < 350) {
     return;
   }
 
   await startSoundPlayback();
-  removeDefaultSoundListeners();
 });
 
 updateSoundButton();
-document.addEventListener("pointerdown", unlockDefaultSound, true);
-document.addEventListener("mousedown", unlockDefaultSound, true);
-document.addEventListener("touchstart", unlockDefaultSound, true);
-document.addEventListener("keydown", unlockDefaultSound, true);
-soundButton?.addEventListener("pointerdown", unlockDefaultSound, true);
-soundButton?.addEventListener("mousedown", unlockDefaultSound, true);
-soundButton?.addEventListener("touchstart", unlockDefaultSound, true);
 runTypewriter({ withSound: false });
