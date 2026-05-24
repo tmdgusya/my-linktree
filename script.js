@@ -60,7 +60,9 @@ const lines = [
 let currentOffset = 0;
 let currentRun = 0;
 let audioContext;
-let soundEnabled = false;
+let soundEnabled = true;
+let soundUnlocked = false;
+let soundUnlocking = false;
 
 const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
 
@@ -88,6 +90,46 @@ async function unlockSound() {
   }
 
   return context.state === "running";
+}
+
+function updateSoundButton() {
+  if (!soundButton) {
+    return;
+  }
+
+  soundButton.classList.toggle("is-on", soundEnabled);
+  soundButton.setAttribute("aria-pressed", String(soundEnabled));
+  soundButton.setAttribute(
+    "aria-label",
+    soundEnabled ? "타자기 소리 켜짐. 클릭하면 다시 재생" : "타자기 소리 켜기",
+  );
+}
+
+async function startSoundPlayback() {
+  if (soundUnlocking) {
+    return false;
+  }
+
+  soundUnlocking = true;
+  let unlocked = false;
+
+  try {
+    unlocked = await unlockSound();
+  } catch {
+    unlocked = false;
+  } finally {
+    soundUnlocking = false;
+  }
+
+  if (!unlocked) {
+    return false;
+  }
+
+  soundEnabled = true;
+  soundUnlocked = true;
+  updateSoundButton();
+  runTypewriter({ withSound: true });
+  return true;
 }
 
 function connectToOutput(input, gain, pan = 0) {
@@ -407,18 +449,36 @@ async function runTypewriter(options = {}) {
   paper.classList.add("is-complete");
 }
 
-soundButton?.addEventListener("click", async () => {
-  const unlocked = await unlockSound();
+function removeDefaultSoundListeners() {
+  document.removeEventListener("pointerdown", unlockDefaultSound, true);
+  document.removeEventListener("touchstart", unlockDefaultSound, true);
+  document.removeEventListener("keydown", unlockDefaultSound, true);
+}
 
-  if (!unlocked) {
+async function unlockDefaultSound(event) {
+  if (soundUnlocked) {
+    removeDefaultSoundListeners();
     return;
   }
 
-  soundEnabled = true;
-  soundButton.classList.add("is-on");
-  soundButton.setAttribute("aria-pressed", "true");
-  soundButton.setAttribute("aria-label", "타자기 소리로 다시 재생");
-  runTypewriter({ withSound: true });
+  if (event.target?.closest?.("#soundButton")) {
+    return;
+  }
+
+  const started = await startSoundPlayback();
+
+  if (started) {
+    removeDefaultSoundListeners();
+  }
+}
+
+soundButton?.addEventListener("click", async () => {
+  await startSoundPlayback();
+  removeDefaultSoundListeners();
 });
 
-runTypewriter();
+updateSoundButton();
+document.addEventListener("pointerdown", unlockDefaultSound, true);
+document.addEventListener("touchstart", unlockDefaultSound, true);
+document.addEventListener("keydown", unlockDefaultSound, true);
+runTypewriter({ withSound: true });

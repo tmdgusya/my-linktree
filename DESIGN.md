@@ -42,7 +42,7 @@ This Linktree should feel like a quiet personal desk artwork: warm, tactile, mec
 - Each character receives random ink pressure, small baseline drift, and a short strike flash.
 - The ribbon/impact marker and type slug move with the current character as a visible strike cue.
 - The machine/paper jolts subtly on each strike and snaps on carriage return.
-- A small sound control unlocks browser audio, restarts the sequence, and plays synthesized strike/carriage sounds through the Web Audio API.
+- Sound is on by default as an intent state. Because browsers block autoplay audio, the first click/tap/key press unlocks Web Audio, restarts the sequence, and plays synthesized strike/carriage sounds.
 
 ## GitHub Pages Notes
 
