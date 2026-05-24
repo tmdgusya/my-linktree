@@ -63,6 +63,7 @@ let audioContext;
 let soundEnabled = true;
 let soundUnlocked = false;
 let soundUnlocking = false;
+let lastSoundStartAt = 0;
 
 const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
 
@@ -111,24 +112,31 @@ async function startSoundPlayback() {
   }
 
   soundUnlocking = true;
-  let unlocked = false;
+  const context = getAudioContext();
 
-  try {
-    unlocked = await unlockSound();
-  } catch {
-    unlocked = false;
-  } finally {
+  if (!context) {
     soundUnlocking = false;
-  }
-
-  if (!unlocked) {
     return false;
   }
 
   soundEnabled = true;
   soundUnlocked = true;
+  lastSoundStartAt = Date.now();
   updateSoundButton();
+  playPrimerSound();
   runTypewriter({ withSound: true });
+
+  try {
+    if (context.state === "suspended") {
+      await context.resume();
+    }
+  } catch {
+    soundUnlocked = false;
+    soundUnlocking = false;
+    return false;
+  }
+
+  soundUnlocking = false;
   return true;
 }
 
@@ -163,6 +171,42 @@ function createNoiseSource(duration) {
   const source = audioContext.createBufferSource();
   source.buffer = buffer;
   return source;
+}
+
+function playPrimerSound() {
+  if (!soundEnabled || !audioContext) {
+    return;
+  }
+
+  const now = audioContext.currentTime;
+  const noise = createNoiseSource(0.036);
+  const filter = audioContext.createBiquadFilter();
+  const gain = audioContext.createGain();
+  const body = audioContext.createOscillator();
+  const bodyGain = audioContext.createGain();
+
+  filter.type = "bandpass";
+  filter.frequency.value = 3200;
+  filter.Q.value = 0.9;
+  gain.gain.setValueAtTime(0.0001, now);
+  gain.gain.exponentialRampToValueAtTime(0.12, now + 0.002);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.042);
+
+  noise.connect(filter);
+  connectToOutput(filter, gain, -0.04);
+  noise.start(now);
+  noise.stop(now + 0.052);
+
+  body.type = "triangle";
+  body.frequency.setValueAtTime(146, now);
+  body.frequency.exponentialRampToValueAtTime(78, now + 0.05);
+  bodyGain.gain.setValueAtTime(0.0001, now);
+  bodyGain.gain.exponentialRampToValueAtTime(0.035, now + 0.004);
+  bodyGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.066);
+
+  connectToOutput(body, bodyGain, -0.04);
+  body.start(now);
+  body.stop(now + 0.074);
 }
 
 function playStrikeSound(char) {
@@ -461,10 +505,6 @@ async function unlockDefaultSound(event) {
     return;
   }
 
-  if (event.target?.closest?.("#soundButton")) {
-    return;
-  }
-
   const started = await startSoundPlayback();
 
   if (started) {
@@ -473,6 +513,10 @@ async function unlockDefaultSound(event) {
 }
 
 soundButton?.addEventListener("click", async () => {
+  if (Date.now() - lastSoundStartAt < 350) {
+    return;
+  }
+
   await startSoundPlayback();
   removeDefaultSoundListeners();
 });
