@@ -24,10 +24,10 @@ This Linktree should feel like a quiet personal desk artwork: warm, calm, techni
 
 ## Typography
 
-- Preferred typewriter face: `J1950Year` / `J1950년` when available locally through SandollCloud.
-- CSS maps several likely local names through `J1950Local`, but the font must actually be installed or supplied as a licensed webfont to appear on GitHub Pages.
-- Fallback stack: `Courier Prime`, `Courier New`, system monospace.
-- Do not commit Sandoll font files into the repository unless the license explicitly permits web embedding and redistribution.
+- Primary face: `YComputer`, loaded from `assets/fonts/Ycomputer.otf`.
+- Source: KT Y Brand's Y콤퓨타체. The official page says Y콤퓨타체 may be used and redistributed freely.
+- Reason: Y콤퓨타 is described as a bitmap typeface with a typewriter-inspired 탈네모 serif structure, closer to the Korean typewriter mood than a generic monospace fallback.
+- Fallback stack: `J1950Year` / `J1950년` if installed locally, then `Courier Prime`, `Courier New`, system monospace.
 
 ## Layout
 
