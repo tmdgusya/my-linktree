@@ -480,15 +480,20 @@ async function runTypewriter(options = {}) {
   paper.classList.add("is-complete");
 }
 
-soundButton?.addEventListener("click", async (event) => {
-  event.preventDefault();
-
-  if (Date.now() - lastSoundStartAt < 350) {
+async function activateSound(event) {
+  if (event && typeof event.preventDefault === "function") {
+    event.preventDefault();
+  }
+  const now = Date.now();
+  if (soundUnlocking || now - lastSoundStartAt < 350) {
     return;
   }
 
   await startSoundPlayback();
-});
+}
+
+soundButton?.addEventListener("click", activateSound);
+soundButton?.addEventListener("touchend", activateSound, { passive: false });
 
 updateSoundButton();
 runTypewriter({ withSound: false });
