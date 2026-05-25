@@ -43,6 +43,12 @@ const lines = [
     height: 26,
   },
   {
+    text: "github ......... github.com/tmdgusya",
+    href: "https://github.com/tmdgusya",
+    label: "github",
+    height: 26,
+  },
+  {
     text: "linkedin ....... linkedin.com/in/승현-정-376842221",
     href: "https://www.linkedin.com/in/%EC%8A%B9%ED%98%84-%EC%A0%95-376842221/",
     label: "linkedin",
